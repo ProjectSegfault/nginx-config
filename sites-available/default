@@ -1,0 +1,147 @@
+server {
+    server_name  _ projectsegfau.lt www.projectsegfau.lt;
+
+    #access_log  /var/log/nginx/host.access.log  main;
+
+    location / {
+        root   /var/www/html;
+        index  index.html index.htm;
+        if ($request_uri ~ ^/(.*)\.html) {
+            return 302 /$1;
+        }
+        try_files $uri $uri.html $uri/ =404;
+    }
+
+    location ~ ^(/_matrix|/_synapse/client|/_synapse/admin) {
+        # note: do not add a path (even a single /) after the port in `proxy_pass`,
+        # otherwise nginx will canonicalise the URI and cause signature verification
+        # errors.
+        
+        proxy_pass http://localhost:8008;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $host;
+        # Increase client_max_body_size to match max_upload_size defined in homeserver.yaml
+        client_max_body_size 50M;
+
+
+        #CORS support
+        #add_header Access-Control-Allow-Origin *;
+        #add_header Access-Control-Max-Age 3600;
+        #add_header Access-Control-Expose-Headers Content-Length;
+        #add_header Access-Control-Allow-Headers Range;
+    }
+
+    error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+    # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+    #
+    #location ~ \.php$ {
+    #    proxy_pass   http://127.0.0.1;
+    #}
+
+    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+    #
+    #location ~ \.php$ {
+    #    root           html;
+    #    fastcgi_pass   127.0.0.1:9000;
+    #    fastcgi_index  index.php;
+    #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+    #    include        fastcgi_params;
+    #}
+
+    # deny access to .htaccess files, if Apache's document root
+    # concurs with nginx's one
+    #
+    #location ~ /\.ht {
+    #    deny  all;
+    #}
+    
+    # Synapse homeserver delegation
+    location /.well-known/matrix/client {
+        return 200 '{"m.homeserver": {"base_url": "https://projectsegfau.lt:8448"}}';
+        default_type application/json;
+        add_header Access-Control-Allow-Origin *;
+    }
+    location /.well-known/matrix/server {
+        return 200 '{"m.server": "projectsegfau.lt:8448"}';
+        default_type application/json;
+        add_header Access-Control-Allow-Origin *;
+    }
+   
+   #location /ddns {
+	#proxy_pass http://ddns-updater:8000;
+   #}
+
+
+
+
+
+
+
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/projectsegfau.lt/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/projectsegfau.lt/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+server {
+    if ($host = www.projectsegfau.lt) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = projectsegfau.lt) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    server_name  _ projectsegfau.lt www.projectsegfau.lt;
+    listen 80;
+    return 404; # managed by Certbot
+
+
+
+
+}

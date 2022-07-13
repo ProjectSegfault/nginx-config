@@ -1,0 +1,53 @@
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  '' close;
+}
+
+upstream grafana {
+  server localhost:3001;
+}
+
+server {
+  server_name grafana.projectsegfau.lt;
+  #root /usr/share/nginx/html;
+  #index index.html index.htm;
+
+  location / {
+    proxy_set_header Host $http_host;
+    proxy_pass http://grafana;
+  }
+
+  # Proxy Grafana Live WebSocket connections.
+  location /api/live/ {
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $http_host;
+    proxy_pass http://grafana;
+  }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/projectsegfau.lt/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/projectsegfau.lt/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+
+
+}
+
+
+
+server {
+    if ($host = grafana.projectsegfau.lt) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+  listen 80;
+  server_name grafana.projectsegfau.lt;
+    return 404; # managed by Certbot
+
+
+}

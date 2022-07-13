@@ -1,0 +1,35 @@
+server {
+	# replace example.com with your domain name
+	server_name analytics.projectsegfau.lt;
+
+	location / {
+		proxy_pass http://127.0.0.1:8001;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	}
+
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/projectsegfau.lt/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/projectsegfau.lt/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+
+
+
+}
+server {
+    if ($host = analytics.projectsegfau.lt) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+	server_name analytics.projectsegfau.lt;
+	
+	listen 80;
+	listen [::]:80;
+    return 404; # managed by Certbot
+
+
+}
